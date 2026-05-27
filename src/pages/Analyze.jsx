@@ -18,7 +18,7 @@ const IMPACT_ROWS = [
   { key: 'service',     label: 'Service delivery' },
   { key: 'reputational',label: 'Reputational' },
   { key: 'compliance',  label: 'Compliance' },
-  { key: 'healthSafety',label: 'Health and safety' },
+  { key: 'development', label: 'Development impact' },
 ];
 
 const EFFECTIVENESS_OPTIONS = ['Weak', 'Moderate', 'Strong'];
@@ -73,7 +73,7 @@ export default function Analyze() {
   const risk = state.risks.find(r => r.id === id);
 
   const [likelihood, setLikelihood] = useState(risk?.likelihood || 3);
-  const [impacts, setImpacts] = useState(risk?.impactScores || { financial: 3, service: 3, reputational: 3, compliance: 3, healthSafety: 3 });
+  const [impacts, setImpacts] = useState(risk?.impactScores || { financial: 3, service: 3, reputational: 3, compliance: 3, development: 3 });
   const [controls, setControls] = useState(risk?.existingControls || '');
   const [effectiveness, setEffectiveness] = useState(risk?.controlEffectiveness || 'Moderate');
 
@@ -105,7 +105,7 @@ export default function Analyze() {
       residualScore,
       residualLevel,
     });
-    navigate(`/risks/${id}/treat`);
+    navigate(`/risks/${id}/evaluate`);
   };
 
   const inputStyle = { borderColor: '#D3D1C7', backgroundColor: 'white' };

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Search } from 'lucide-react';
 import { useRiskStore } from '../store/RiskStore';
 import ScorePill from '../components/ScorePill';
+import { resumeRoute } from '../utils/riskRoute';
 
 const PAGE_SIZE = 10;
 
@@ -115,7 +116,7 @@ export default function Register() {
               return (
                 <tr
                   key={risk.id}
-                  onClick={() => navigate(`/risks/${risk.id}/analyze`)}
+                  onClick={() => navigate(resumeRoute(risk))}
                   className="cursor-pointer hover:bg-gray-50 transition-colors"
                   style={{ borderBottom: idx < paginated.length - 1 ? '1px solid #F0EFE9' : 'none' }}
                 >

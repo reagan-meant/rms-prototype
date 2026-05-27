@@ -3,14 +3,19 @@ import seedData from '../data/seed.json';
 
 const RiskStoreContext = createContext(null);
 
+const SEED_VERSION = '3';
+
 export function RiskStoreProvider({ children }) {
   const [state, setState] = useState(() => {
     const saved = sessionStorage.getItem('rms-state');
-    return saved ? JSON.parse(saved) : seedData;
+    const version = sessionStorage.getItem('rms-version');
+    if (saved && version === SEED_VERSION) return JSON.parse(saved);
+    return seedData;
   });
 
   useEffect(() => {
     sessionStorage.setItem('rms-state', JSON.stringify(state));
+    sessionStorage.setItem('rms-version', SEED_VERSION);
   }, [state]);
 
   const addRisk = (risk) => setState(s => ({ ...s, risks: [...s.risks, risk] }));
@@ -27,13 +32,27 @@ export function RiskStoreProvider({ children }) {
     ),
   }));
 
+  const updateAction = (riskId, actionId, patch) => setState(s => ({
+    ...s,
+    risks: s.risks.map(r =>
+      r.id === riskId
+        ? {
+            ...r,
+            actions: r.actions.map(a =>
+              a.id === actionId ? { ...a, ...patch } : a
+            ),
+          }
+        : r
+    ),
+  }));
+
   const resetDemo = () => {
     sessionStorage.removeItem('rms-state');
     setState(seedData);
   };
 
   return (
-    <RiskStoreContext.Provider value={{ state, addRisk, updateRisk, addAction, resetDemo }}>
+    <RiskStoreContext.Provider value={{ state, addRisk, updateRisk, addAction, updateAction, resetDemo }}>
       {children}
     </RiskStoreContext.Provider>
   );

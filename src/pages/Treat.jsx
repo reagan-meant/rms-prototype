@@ -31,10 +31,13 @@ export default function Treat() {
 
   const risk = state.risks.find(r => r.id === id);
 
-  const [strategy, setStrategy] = useState(risk?.treatmentStrategy || 'Mitigate');
+  // Seed strategy from Evaluate decision if available, then treatmentStrategy, then default
+  const defaultStrategy = risk?.evaluationDecision || risk?.treatmentStrategy || 'Mitigate';
+  const [strategy, setStrategy] = useState(defaultStrategy);
   const [targetDate, setTargetDate] = useState(risk?.targetCompletion || '');
   const [showAddForm, setShowAddForm] = useState(false);
   const [newAction, setNewAction] = useState({ title: '', owner: '', department: '', budget: '', dueDate: '' });
+  const [pendingStrategy, setPendingStrategy] = useState(null);
 
   if (!risk) {
     return (
@@ -45,6 +48,21 @@ export default function Treat() {
   }
 
   const actions = risk.actions || [];
+
+  const handleStrategyChange = (newStrategy) => {
+    if (actions.length > 0 && newStrategy !== strategy) {
+      setPendingStrategy(newStrategy);
+    } else {
+      setStrategy(newStrategy);
+    }
+  };
+
+  const confirmStrategyChange = () => {
+    updateRisk(id, { actions: [] });
+    setStrategy(pendingStrategy);
+    setPendingStrategy(null);
+    setShowAddForm(false);
+  };
   const totalBudget = actions.reduce((sum, a) => sum + (Number(a.budget) || 0), 0);
 
   const handleAddAction = () => {
@@ -65,8 +83,41 @@ export default function Treat() {
     navigate('/register');
   };
 
+  const handleSubmit = () => {
+    updateRisk(id, { treatmentStrategy: strategy, targetCompletion: targetDate, treatmentSubmitted: true });
+    navigate('/register');
+  };
+
   const inputStyle = { borderColor: '#D3D1C7', backgroundColor: 'white' };
   const inputClass = "px-3 py-1.5 text-sm rounded border focus:outline-none";
+
+  const actionConfig = {
+    Mitigate: {
+      sectionTitle: 'Mitigation actions',
+      addLabel: 'Add action',
+      placeholder: 'Describe the mitigation action...',
+      emptyState: 'No actions yet. Add the first mitigation action.',
+    },
+    Accept: {
+      sectionTitle: 'Acceptance conditions',
+      addLabel: 'Add condition',
+      placeholder: 'Describe the acceptance condition or monitoring requirement...',
+      emptyState: 'No conditions recorded. Add any monitoring requirements for this accepted risk.',
+    },
+    Transfer: {
+      sectionTitle: 'Transfer arrangements',
+      addLabel: 'Add arrangement',
+      placeholder: 'Describe the transfer mechanism (e.g. insurance policy, contractual clause)...',
+      emptyState: 'No arrangements recorded. Add the transfer mechanism details.',
+    },
+    Avoid: {
+      sectionTitle: 'Avoidance actions',
+      addLabel: 'Add action',
+      placeholder: 'Describe the action to discontinue or avoid the risk-bearing activity...',
+      emptyState: 'No avoidance actions recorded. Add the steps to eliminate this risk.',
+    },
+  };
+  const cfg = actionConfig[strategy] || actionConfig.Mitigate;
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
@@ -92,7 +143,7 @@ export default function Treat() {
             <label className="block text-xs font-medium mb-1" style={{ color: '#2C2C2A' }}>Treatment strategy</label>
             <select
               value={strategy}
-              onChange={e => setStrategy(e.target.value)}
+              onChange={e => handleStrategyChange(e.target.value)}
               className={`w-full ${inputClass}`}
               style={inputStyle}
             >
@@ -115,16 +166,16 @@ export default function Treat() {
         </div>
       </div>
 
-      {/* Mitigation actions */}
+      {/* Actions card */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold" style={{ color: '#2C2C2A' }}>Mitigation actions</h3>
+          <h3 className="text-sm font-semibold" style={{ color: '#2C2C2A' }}>{cfg.sectionTitle}</h3>
           <button
             onClick={() => setShowAddForm(v => !v)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded font-medium hover:opacity-90 transition-opacity text-white"
             style={{ backgroundColor: '#185FA5' }}
           >
-            <Plus size={12} /> Add action
+            <Plus size={12} /> {cfg.addLabel}
           </button>
         </div>
 
@@ -140,7 +191,7 @@ export default function Treat() {
                   style={inputStyle}
                   value={newAction.title}
                   onChange={e => setNewAction(a => ({ ...a, title: e.target.value }))}
-                  placeholder="Describe the mitigation action..."
+                  placeholder={cfg.placeholder}
                 />
               </div>
               <div>
@@ -170,7 +221,7 @@ export default function Treat() {
         {/* Action list */}
         <div className="flex flex-col gap-3">
           {actions.length === 0 && (
-            <p className="text-sm text-center py-4" style={{ color: '#5F5E5A' }}>No actions yet. Add the first mitigation action.</p>
+            <p className="text-sm text-center py-4" style={{ color: '#5F5E5A' }}>{cfg.emptyState}</p>
           )}
           {actions.map(action => (
             <div key={action.id} className="p-3 rounded border" style={{ borderColor: '#D3D1C7' }}>
@@ -212,7 +263,7 @@ export default function Treat() {
 
       <div className="flex items-center justify-between mt-5">
         <button
-          onClick={() => navigate(`/risks/${id}/analyze`)}
+          onClick={() => navigate(`/risks/${id}/evaluate`)}
           className="px-4 py-2 text-sm rounded border hover:bg-gray-50 transition-colors"
           style={{ borderColor: '#D3D1C7', color: '#5F5E5A' }}
         >
@@ -227,7 +278,7 @@ export default function Treat() {
             Save draft
           </button>
           <button
-            onClick={handleSave}
+            onClick={handleSubmit}
             className="px-4 py-2 text-sm rounded text-white font-medium hover:opacity-90 transition-opacity"
             style={{ backgroundColor: '#0F6E56' }}
           >
@@ -235,6 +286,36 @@ export default function Treat() {
           </button>
         </div>
       </div>
+
+      {/* Strategy change confirmation dialog */}
+      {pendingStrategy && (
+        <div className="fixed inset-0 flex items-center justify-center z-50" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
+          <div className="card max-w-sm w-full mx-4">
+            <h3 className="text-sm font-semibold mb-2" style={{ color: '#2C2C2A' }}>
+              Change strategy to "{pendingStrategy}"?
+            </h3>
+            <p className="text-sm mb-5" style={{ color: '#5F5E5A' }}>
+              This will clear the {actions.length} existing {actions.length === 1 ? 'entry' : 'entries'} from "{cfg.sectionTitle}". This cannot be undone.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setPendingStrategy(null)}
+                className="px-4 py-2 text-sm rounded border hover:bg-gray-50 transition-colors"
+                style={{ borderColor: '#D3D1C7', color: '#5F5E5A' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmStrategyChange}
+                className="px-4 py-2 text-sm rounded text-white font-medium hover:opacity-90 transition-opacity"
+                style={{ backgroundColor: '#E24B4A' }}
+              >
+                Clear and change
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

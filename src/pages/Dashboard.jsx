@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Filter, Download } from 'lucide-react';
 import { useRiskStore } from '../store/RiskStore';
 import ScorePill from '../components/ScorePill';
+import { resumeRoute, isSubmitted } from '../utils/riskRoute';
 
 const LIKELIHOOD_LABELS = ['', 'Rare', 'Unlikely', 'Possible', 'Likely', 'Certain'];
 
@@ -87,7 +88,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { kpis, heatMap, risks, ministry } = state;
 
-  const topRisks = [...risks]
+  const submitted = risks.filter(isSubmitted);
+  const topRisks = (submitted.length > 0 ? submitted : risks)
     .sort((a, b) => b.residualScore - a.residualScore)
     .slice(0, 5);
 
@@ -171,7 +173,7 @@ export default function Dashboard() {
               return (
                 <div
                   key={risk.id}
-                  onClick={() => navigate(`/risks/${risk.id}/analyze`)}
+                  onClick={() => navigate(resumeRoute(risk))}
                   className="flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-gray-50 transition-colors"
                 >
                   <span className="text-xs font-mono font-medium shrink-0" style={{ color: '#5F5E5A', minWidth: '70px' }}>

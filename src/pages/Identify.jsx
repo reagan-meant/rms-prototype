@@ -30,13 +30,12 @@ export default function Identify() {
   const handleSubmit = () => {
     if (!form.title || !form.description || !form.category || !form.department || !form.ownerId) return;
 
-    const id = `MOH-${Date.now().toString().slice(-4)}`;
-    const owner = owners.find(o => o.id === form.ownerId);
+    const id = `NPA-${Date.now().toString().slice(-4)}`;
     const newRisk = {
       id,
       ...form,
       likelihood: 3,
-      impactScores: { financial: 3, service: 3, reputational: 3, compliance: 3, healthSafety: 3 },
+      impactScores: { financial: 3, service: 3, reputational: 3, compliance: 3, development: 3 },
       overallImpact: 3,
       inherentScore: 9,
       inherentLevel: 'Medium',

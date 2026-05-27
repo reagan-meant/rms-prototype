@@ -4,5 +4,5 @@ import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/rms-prototype/',
+  base: process.env.DEPLOY ? '/rms-prototype/' : '/',
 })
