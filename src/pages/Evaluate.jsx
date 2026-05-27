@@ -40,7 +40,7 @@ export default function Evaluate() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <Breadcrumb items={[`${id}`, 'Step 3: Evaluate']} />
-      <StepProgress activeStep={3} />
+      <StepProgress activeStep={3} riskId={id} risk={risk} />
 
       <div className="card">
         <h2 className="text-base font-semibold mb-1" style={{ color: '#2C2C2A' }}>Evaluate risk</h2>

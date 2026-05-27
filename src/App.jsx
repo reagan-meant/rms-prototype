@@ -19,6 +19,7 @@ function Layout() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/register" element={<Register />} />
           <Route path="/risks/new/identify" element={<Identify />} />
+          <Route path="/risks/:id/identify" element={<Identify />} />
           <Route path="/risks/:id/analyze" element={<Analyze />} />
           <Route path="/risks/:id/evaluate" element={<Evaluate />} />
           <Route path="/risks/:id/treat" element={<Treat />} />

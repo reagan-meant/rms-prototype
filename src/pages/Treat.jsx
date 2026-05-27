@@ -122,7 +122,7 @@ export default function Treat() {
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <Breadcrumb items={[`${id}`, 'Step 4: Treatment plan']} />
-      <StepProgress activeStep={4} />
+      <StepProgress activeStep={4} riskId={id} risk={risk} />
 
       {/* Risk summary */}
       <div className="card mb-4">

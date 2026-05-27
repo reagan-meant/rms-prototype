@@ -113,7 +113,7 @@ export default function Analyze() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <Breadcrumb items={[`${id}`, 'Step 2: Analyze']} />
-      <StepProgress activeStep={2} />
+      <StepProgress activeStep={2} riskId={id} risk={risk} />
 
       <div className="flex gap-5">
         {/* Main */}
@@ -233,7 +233,7 @@ export default function Analyze() {
 
       <div className="flex items-center justify-between mt-5">
         <button
-          onClick={() => navigate('/register')}
+          onClick={() => navigate(`/risks/${id}/identify`)}
           className="px-4 py-2 text-sm rounded border hover:bg-gray-50 transition-colors"
           style={{ borderColor: '#D3D1C7', color: '#5F5E5A' }}
         >

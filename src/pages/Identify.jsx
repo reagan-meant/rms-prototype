@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Upload } from 'lucide-react';
 import { useRiskStore } from '../store/RiskStore';
 import Breadcrumb from '../components/Breadcrumb';
@@ -11,18 +11,21 @@ const labelClass = "block text-xs font-medium mb-1";
 const labelStyle = { color: '#2C2C2A' };
 
 export default function Identify() {
-  const { state, addRisk } = useRiskStore();
+  const { id } = useParams();
+  const { state, addRisk, updateRisk } = useRiskStore();
   const navigate = useNavigate();
   const { departments, categories, owners, strategicObjectives } = state;
 
+  const existing = id ? state.risks.find(r => r.id === id) : null;
+
   const [form, setForm] = useState({
-    title: '',
-    description: '',
-    category: '',
-    department: '',
-    ownerId: '',
-    strategicObjective: '',
-    rootCauses: '',
+    title: existing?.title || '',
+    description: existing?.description || '',
+    category: existing?.category || '',
+    department: existing?.department || '',
+    ownerId: existing?.ownerId || '',
+    strategicObjective: existing?.strategicObjective || '',
+    rootCauses: existing?.rootCauses || '',
   });
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
@@ -30,40 +33,45 @@ export default function Identify() {
   const handleSubmit = () => {
     if (!form.title || !form.description || !form.category || !form.department || !form.ownerId) return;
 
-    const id = `NPA-${Date.now().toString().slice(-4)}`;
-    const newRisk = {
-      id,
-      ...form,
-      likelihood: 3,
-      impactScores: { financial: 3, service: 3, reputational: 3, compliance: 3, development: 3 },
-      overallImpact: 3,
-      inherentScore: 9,
-      inherentLevel: 'Medium',
-      existingControls: '',
-      controlEffectiveness: 'Moderate',
-      residualScore: 5,
-      residualLevel: 'Medium',
-      treatmentStrategy: 'Mitigate',
-      targetCompletion: '',
-      status: 'Active',
-      reviewDate: '',
-      isOverdue: false,
-      actions: [],
-    };
-    addRisk(newRisk);
-    navigate(`/risks/${id}/analyze`);
+    if (existing) {
+      updateRisk(existing.id, form);
+      navigate(`/risks/${existing.id}/analyze`);
+    } else {
+      const newId = `NPA-${Date.now().toString().slice(-4)}`;
+      addRisk({
+        id: newId,
+        ...form,
+        likelihood: 3,
+        impactScores: { financial: 3, service: 3, reputational: 3, compliance: 3, development: 3 },
+        overallImpact: 3,
+        inherentScore: 9,
+        inherentLevel: 'Medium',
+        existingControls: '',
+        controlEffectiveness: 'Moderate',
+        residualScore: 5,
+        residualLevel: 'Medium',
+        treatmentStrategy: 'Mitigate',
+        targetCompletion: '',
+        status: 'Active',
+        reviewDate: '',
+        isOverdue: false,
+        actions: [],
+      });
+      navigate(`/risks/${newId}/analyze`);
+    }
   };
+
+  const riskId = existing?.id || null;
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <Breadcrumb items={['Risk register', 'New risk', 'Step 1: Identify']} />
-      <StepProgress activeStep={1} />
+      <Breadcrumb items={existing ? [existing.id, 'Step 1: Identify'] : ['Risk register', 'New risk', 'Step 1: Identify']} />
+      <StepProgress activeStep={1} riskId={riskId} risk={existing} />
 
       <div className="card">
         <h2 className="text-base font-semibold mb-5" style={{ color: '#2C2C2A' }}>Identify risk</h2>
 
         <div className="grid gap-4" style={{ gridTemplateColumns: '1fr 1fr' }}>
-          {/* Full width */}
           <div className="col-span-2">
             <label className={labelClass} style={labelStyle}>Risk title <span style={{ color: '#E24B4A' }}>*</span></label>
             <input type="text" className={inputClass} style={inputStyle} value={form.title} onChange={set('title')} placeholder="e.g. Stockout of essential medicines" />
@@ -121,33 +129,25 @@ export default function Identify() {
               <p className="text-sm" style={{ color: '#5F5E5A' }}>Drop files here or click to upload</p>
               <p className="text-xs" style={{ color: '#9C9B98' }}>PDF, DOCX, XLSX up to 10MB</p>
             </div>
-            <div className="mt-2 flex items-center gap-2 px-3 py-1.5 rounded text-xs w-fit" style={{ backgroundColor: '#EAF3DE', color: '#173404' }}>
-              📎 risk-context-brief.pdf
-            </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between mt-6 pt-4" style={{ borderTop: '1px solid #D3D1C7' }}>
-          <button className="px-4 py-2 text-sm rounded border hover:bg-gray-50 transition-colors" style={{ borderColor: '#D3D1C7', color: '#5F5E5A' }}>
-            Save as draft
+          <button
+            onClick={() => navigate('/register')}
+            className="px-4 py-2 text-sm rounded border hover:bg-gray-50 transition-colors"
+            style={{ borderColor: '#D3D1C7', color: '#5F5E5A' }}
+          >
+            ← Back to register
           </button>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate('/register')}
-              className="px-4 py-2 text-sm rounded border hover:bg-gray-50 transition-colors"
-              style={{ borderColor: '#D3D1C7', color: '#5F5E5A' }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={!form.title || !form.description || !form.category || !form.department || !form.ownerId}
-              className="px-4 py-2 text-sm rounded text-white font-medium hover:opacity-90 disabled:opacity-40 transition-opacity"
-              style={{ backgroundColor: '#185FA5' }}
-            >
-              Continue to analyze →
-            </button>
-          </div>
+          <button
+            onClick={handleSubmit}
+            disabled={!form.title || !form.description || !form.category || !form.department || !form.ownerId}
+            className="px-4 py-2 text-sm rounded text-white font-medium hover:opacity-90 disabled:opacity-40 transition-opacity"
+            style={{ backgroundColor: '#185FA5' }}
+          >
+            Continue to analyze →
+          </button>
         </div>
       </div>
     </div>
